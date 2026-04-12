@@ -8,7 +8,7 @@ def get_ai_response(user_input):
             OLLAMA_URL,
             json={
                 "model": "phi",
-                "prompt": f"You are a communication trainer. Respond clearly and helpfully.\nUser: {user_input}\nAI:",
+                "prompt": f"You are a communication coach. Give a helpful, clear, and relevant response.\nUser: {user_input}\nAI:",
                 "stream": False
             },
             timeout=15
@@ -18,7 +18,7 @@ def get_ai_response(user_input):
             data = response.json()
             return data.get("response", "").strip() or "No response from AI"
 
-        return "AI service error"
+        return f"AI Error: {response.status_code}"
 
     except Exception as e:
         return f"Error: {str(e)}"

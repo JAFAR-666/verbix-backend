@@ -20,8 +20,8 @@ def get_gd_response(user_input, topic, turn):
     try:
         roles = [
             ("Leader", "You lead the discussion with strong and clear opinions."),
-            ("Opponent", "You disagree politely and provide counter-arguments."),
-            ("Neutral", "You balance both sides and give a thoughtful perspective.")
+            ("Opponent", "You politely disagree and give counter-arguments."),
+            ("Neutral", "You provide a balanced and thoughtful perspective.")
         ]
 
         role_name, role_prompt = roles[turn % len(roles)]
@@ -34,11 +34,11 @@ def get_gd_response(user_input, topic, turn):
         Previous speaker said: "{user_input}"
 
         Respond as a {role_name} in a group discussion.
-        Make your response:
-        - Relevant to the topic
-        - Different from previous responses
-        - Natural and conversational
-        - 1–2 sentences only
+        Keep response:
+        - Relevant
+        - Natural
+        - Unique
+        - 1-2 sentences only
         """
 
         response = requests.post(
@@ -66,41 +66,41 @@ def fallback_gd_response(user_input, topic):
 
     if "ai" in topic:
         return random.choice([
-            "AI is transforming jobs, but it also creates new opportunities.",
-            "Human creativity still gives us an advantage over AI.",
-            "Automation may replace routine tasks, not complex roles."
+            "AI is transforming industries but also creating new opportunities.",
+            "Human creativity still plays a major role alongside AI.",
+            "Automation may replace repetitive jobs but not complex thinking."
         ])
 
     elif "social media" in topic:
         return random.choice([
-            "Social media connects people but can also distract them.",
-            "It has benefits, but overuse affects mental health.",
-            "Responsible usage is the key."
+            "Social media connects people but can also distract.",
+            "Overuse of social media impacts mental health.",
+            "It depends on how responsibly it is used."
         ])
 
     elif "learning" in topic:
         return random.choice([
             "Online learning is flexible but lacks interaction.",
-            "Offline learning builds discipline.",
-            "A hybrid model works best."
+            "Offline learning improves engagement.",
+            "Hybrid learning seems most effective."
         ])
 
     elif "education" in topic:
         return random.choice([
-            "Free education improves access.",
-            "Funding quality is a challenge.",
+            "Free education improves accessibility.",
+            "Funding quality education is challenging.",
             "Affordable education is more realistic."
         ])
 
     elif "technology" in topic:
         return random.choice([
-            "Technology improves life but can reduce activity.",
-            "Balance is important.",
-            "Overuse leads to laziness."
+            "Technology improves life but reduces activity.",
+            "Balance is key in using technology.",
+            "Overuse can make people less productive."
         ])
 
     return random.choice([
-        "That's an interesting point.",
-        "I see your perspective.",
-        "Can you explain more?"
+        "That's a valid point.",
+        "I agree to some extent.",
+        "Can you elaborate further?"
     ])
