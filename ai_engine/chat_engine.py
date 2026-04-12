@@ -1,37 +1,24 @@
 import requests
 
-# Ollama API
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL = "phi"   # change to "llama3" for better quality
-
+OLLAMA_URL = "https://flatly-agreeing-flyover.ngrok-free.dev/api/generate"
 
 def get_ai_response(user_input):
     try:
-        prompt = f"""
-        You are a professional communication trainer.
-
-        User said: {user_input}
-
-        Respond clearly, helpfully, and encourage better communication.
-        """
-
-        payload = {
-            "model": MODEL,
-            "prompt": prompt,
-            "stream": False
-        }
-
-        response = requests.post(OLLAMA_URL, json=payload)
+        response = requests.post(
+            OLLAMA_URL,
+            json={
+                "model": "phi",
+                "prompt": f"You are a communication trainer. Respond clearly and helpfully.\nUser: {user_input}\nAI:",
+                "stream": False
+            },
+            timeout=15
+        )
 
         if response.status_code == 200:
-            return response.json()["response"].strip()
-        else:
-            return fallback_response(user_input)
+            data = response.json()
+            return data.get("response", "").strip() or "No response from AI"
 
-    except Exception:
-        return fallback_response(user_input)
+        return "AI service error"
 
-
-# 🔁 Fallback (if Ollama fails)
-def fallback_response(user_input):
-    return f"I understand your point about '{user_input}'. Can you explain it more clearly?"
+    except Exception as e:
+        return f"Error: {str(e)}"

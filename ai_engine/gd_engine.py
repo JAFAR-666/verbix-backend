@@ -1,7 +1,7 @@
 import random
 import requests
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
+OLLAMA_URL = "https://flatly-agreeing-flyover.ngrok-free.dev/api/generate"
 MODEL = "phi"
 
 
@@ -18,64 +18,89 @@ def generate_gd_topic():
 
 def get_gd_response(user_input, topic, turn):
     try:
-        # 🎭 Different personalities
-        personalities = [
-            "You are a confident speaker who strongly presents opinions.",
-            "You are a critical thinker who questions others.",
-            "You are a balanced participant who gives neutral views."
+        roles = [
+            ("Leader", "You lead the discussion with strong and clear opinions."),
+            ("Opponent", "You disagree politely and provide counter-arguments."),
+            ("Neutral", "You balance both sides and give a thoughtful perspective.")
         ]
 
-        personality = personalities[turn % len(personalities)]
+        role_name, role_prompt = roles[turn % len(roles)]
 
         prompt = f"""
-        {personality}
+        {role_prompt}
 
         Topic: {topic}
 
-        User said: {user_input}
+        Previous speaker said: "{user_input}"
 
-        Respond like a participant in a group discussion.
-        Keep it short, natural, and relevant.
+        Respond as a {role_name} in a group discussion.
+        Make your response:
+        - Relevant to the topic
+        - Different from previous responses
+        - Natural and conversational
+        - 1–2 sentences only
         """
 
-        payload = {
-            "model": MODEL,
-            "prompt": prompt,
-            "stream": False
-        }
-
-        response = requests.post(OLLAMA_URL, json=payload)
+        response = requests.post(
+            OLLAMA_URL,
+            json={
+                "model": MODEL,
+                "prompt": prompt,
+                "stream": False
+            },
+            timeout=15
+        )
 
         if response.status_code == 200:
-            return response.json()["response"].strip()
-        else:
-            return fallback_gd_response(user_input, topic)
+            data = response.json()
+            return data.get("response", "").strip() or fallback_gd_response(user_input, topic)
+
+        return fallback_gd_response(user_input, topic)
 
     except Exception:
         return fallback_gd_response(user_input, topic)
 
 
-# 🔁 Fallback GD logic (if Ollama fails)
 def fallback_gd_response(user_input, topic):
     topic = topic.lower()
 
     if "ai" in topic:
         return random.choice([
-            "AI is changing industries rapidly.",
-            "It creates jobs but also replaces some roles.",
-            "Human creativity will always be important."
+            "AI is transforming jobs, but it also creates new opportunities.",
+            "Human creativity still gives us an advantage over AI.",
+            "Automation may replace routine tasks, not complex roles."
         ])
 
     elif "social media" in topic:
         return random.choice([
-            "Social media has both benefits and drawbacks.",
-            "It connects people but can be addictive.",
-            "It impacts mental health significantly."
+            "Social media connects people but can also distract them.",
+            "It has benefits, but overuse affects mental health.",
+            "Responsible usage is the key."
         ])
 
-    else:
+    elif "learning" in topic:
         return random.choice([
-            "That's an interesting point.",
-            "I see your perspective.",
-            "Can you explain further?"
+            "Online learning is flexible but lacks interaction.",
+            "Offline learning builds discipline.",
+            "A hybrid model works best."
         ])
+
+    elif "education" in topic:
+        return random.choice([
+            "Free education improves access.",
+            "Funding quality is a challenge.",
+            "Affordable education is more realistic."
+        ])
+
+    elif "technology" in topic:
+        return random.choice([
+            "Technology improves life but can reduce activity.",
+            "Balance is important.",
+            "Overuse leads to laziness."
+        ])
+
+    return random.choice([
+        "That's an interesting point.",
+        "I see your perspective.",
+        "Can you explain more?"
+    ])
