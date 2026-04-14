@@ -1,7 +1,11 @@
 import random
-import requests
+import os
+from groq import Groq
+from dotenv import load_dotenv
 
-OLLAMA_URL = "https://abc123.ngrok-free.dev/api/generate"
+load_dotenv()
+
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # -----------------------------
 # TOPIC
@@ -18,16 +22,11 @@ def generate_gd_topic():
 # -----------------------------
 def call_ai(prompt):
     try:
-        res = requests.post(
-            OLLAMA_URL,
-            json={
-                "model": "phi",
-                "prompt": prompt,
-                "stream": False
-            },
-            timeout=60
+        response = client.chat.completions.create(
+            model="llama3-70b-8192",
+            messages=[{"role": "user", "content": prompt}]
         )
-        return res.json().get("response", "").strip()
+        return response.choices[0].message.content.strip()
     except:
         return ""
 
@@ -35,13 +34,11 @@ def call_ai(prompt):
 # ADVANCED GD ENGINE
 # -----------------------------
 def get_gd_responses(user_input, topic, history):
-    history_text = ""
-    for role, msg in history[-10:]:
-        history_text += f"{role}: {msg}\n"
 
-    # LEADER
+    history_text = "\n".join([f"{r}: {m}" for r, m in history[-10:]])
+
     leader = call_ai(f"""
-You are a strong GD Leader.
+You are a confident GD leader.
 
 Topic: {topic}
 
@@ -50,47 +47,53 @@ Discussion:
 
 User: {user_input}
 
-- Take strong position
-- Add new idea
-- Be confident
-- 1-2 lines
-""") or "I strongly believe this topic needs serious attention."
+Speak strongly and add a new point.
+Keep it 1-2 lines.
+""") or "I strongly believe this topic is important."
 
-    # OPPONENT (interrupt + disagree)
     opponent = call_ai(f"""
-You are an Opponent.
+You are an opponent.
 
 Leader said: {leader}
 
-- Interrupt slightly
-- Disagree strongly
-- Challenge logic
-- 1-2 lines
-""") or "I disagree — that argument is not fully valid."
+Interrupt and disagree strongly.
+""") or "I disagree with that point."
 
-    # NEUTRAL
     neutral = call_ai(f"""
-You are Neutral.
+You are neutral.
 
 Leader: {leader}
 Opponent: {opponent}
 
-- Refer both
-- Balance discussion
-- Add insight
-- 1-2 lines
-""") or "Both perspectives are valid."
+Balance both sides.
+""") or "Both views are valid."
 
-    # FOLLOW-UP QUESTION
     question = call_ai(f"""
-You are a GD Moderator.
+Ask a follow-up question to the user.
 
 Topic: {topic}
-
-Ask user a challenging follow-up question.
-
-- Short
-- Thought-provoking
-""") or "Can you justify your point with an example?"
+""") or "Can you justify your opinion?"
 
     return [leader, opponent, neutral, question]
+
+
+# -----------------------------
+# AI EVALUATION
+# -----------------------------
+def evaluate_gd(history):
+    text = "\n".join([f"{r}: {m}" for r, m in history])
+
+    result = call_ai(f"""
+Evaluate this group discussion:
+
+{text}
+
+Give:
+- Confidence score /10
+- Relevance score /10
+- Communication score /10
+
+Also give short feedback.
+""")
+
+    return result

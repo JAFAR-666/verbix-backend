@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from ai_engine.gd_engine import generate_gd_topic, get_gd_responses
+from ai_engine.gd_engine import generate_gd_topic, get_gd_responses, evaluate_gd
 
 router = APIRouter()
 
@@ -21,3 +21,8 @@ def respond(data: dict):
         "neutral": responses[2],
         "question": responses[3]
     }
+
+@router.post("/gd/evaluate")
+def evaluate(data: dict):
+    result = evaluate_gd(data["history"])
+    return {"result": result}
