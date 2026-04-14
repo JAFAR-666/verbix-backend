@@ -1,106 +1,96 @@
 import random
 import requests
 
-OLLAMA_URL = "https://flatly-agreeing-flyover.ngrok-free.dev/api/generate"
-MODEL = "phi"
+OLLAMA_URL = "https://abc123.ngrok-free.dev/api/generate"
 
-
+# -----------------------------
+# TOPIC
+# -----------------------------
 def generate_gd_topic():
-    topics = [
+    return random.choice([
         "Is AI replacing human jobs?",
-        "Impact of social media on youth",
         "Online learning vs offline learning",
-        "Should college education be free?",
-        "Is technology making people lazy?"
-    ]
-    return random.choice(topics)
+        "Impact of social media on youth"
+    ])
 
-
-def get_gd_response(user_input, topic, turn):
+# -----------------------------
+# AI CALL
+# -----------------------------
+def call_ai(prompt):
     try:
-        roles = [
-            ("Leader", "You lead the discussion with strong and clear opinions."),
-            ("Opponent", "You politely disagree and give counter-arguments."),
-            ("Neutral", "You provide a balanced and thoughtful perspective.")
-        ]
-
-        role_name, role_prompt = roles[turn % len(roles)]
-
-        prompt = f"""
-        {role_prompt}
-
-        Topic: {topic}
-
-        Previous speaker said: "{user_input}"
-
-        Respond as a {role_name} in a group discussion.
-        Keep response:
-        - Relevant
-        - Natural
-        - Unique
-        - 1-2 sentences only
-        """
-
-        response = requests.post(
+        res = requests.post(
             OLLAMA_URL,
             json={
-                "model": MODEL,
+                "model": "phi",
                 "prompt": prompt,
                 "stream": False
             },
-            timeout=15
+            timeout=60
         )
+        return res.json().get("response", "").strip()
+    except:
+        return ""
 
-        if response.status_code == 200:
-            data = response.json()
-            return data.get("response", "").strip() or fallback_gd_response(user_input, topic)
+# -----------------------------
+# ADVANCED GD ENGINE
+# -----------------------------
+def get_gd_responses(user_input, topic, history):
+    history_text = ""
+    for role, msg in history[-10:]:
+        history_text += f"{role}: {msg}\n"
 
-        return fallback_gd_response(user_input, topic)
+    # LEADER
+    leader = call_ai(f"""
+You are a strong GD Leader.
 
-    except Exception:
-        return fallback_gd_response(user_input, topic)
+Topic: {topic}
 
+Discussion:
+{history_text}
 
-def fallback_gd_response(user_input, topic):
-    topic = topic.lower()
+User: {user_input}
 
-    if "ai" in topic:
-        return random.choice([
-            "AI is transforming industries but also creating new opportunities.",
-            "Human creativity still plays a major role alongside AI.",
-            "Automation may replace repetitive jobs but not complex thinking."
-        ])
+- Take strong position
+- Add new idea
+- Be confident
+- 1-2 lines
+""") or "I strongly believe this topic needs serious attention."
 
-    elif "social media" in topic:
-        return random.choice([
-            "Social media connects people but can also distract.",
-            "Overuse of social media impacts mental health.",
-            "It depends on how responsibly it is used."
-        ])
+    # OPPONENT (interrupt + disagree)
+    opponent = call_ai(f"""
+You are an Opponent.
 
-    elif "learning" in topic:
-        return random.choice([
-            "Online learning is flexible but lacks interaction.",
-            "Offline learning improves engagement.",
-            "Hybrid learning seems most effective."
-        ])
+Leader said: {leader}
 
-    elif "education" in topic:
-        return random.choice([
-            "Free education improves accessibility.",
-            "Funding quality education is challenging.",
-            "Affordable education is more realistic."
-        ])
+- Interrupt slightly
+- Disagree strongly
+- Challenge logic
+- 1-2 lines
+""") or "I disagree — that argument is not fully valid."
 
-    elif "technology" in topic:
-        return random.choice([
-            "Technology improves life but reduces activity.",
-            "Balance is key in using technology.",
-            "Overuse can make people less productive."
-        ])
+    # NEUTRAL
+    neutral = call_ai(f"""
+You are Neutral.
 
-    return random.choice([
-        "That's a valid point.",
-        "I agree to some extent.",
-        "Can you elaborate further?"
-    ])
+Leader: {leader}
+Opponent: {opponent}
+
+- Refer both
+- Balance discussion
+- Add insight
+- 1-2 lines
+""") or "Both perspectives are valid."
+
+    # FOLLOW-UP QUESTION
+    question = call_ai(f"""
+You are a GD Moderator.
+
+Topic: {topic}
+
+Ask user a challenging follow-up question.
+
+- Short
+- Thought-provoking
+""") or "Can you justify your point with an example?"
+
+    return [leader, opponent, neutral, question]

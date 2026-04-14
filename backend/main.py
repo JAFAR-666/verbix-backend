@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from .routes import chat
-from .routes import gd
+from backend.routes import chat
+from backend.routes import gd
 
 app = FastAPI()
 

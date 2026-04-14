@@ -1,6 +1,6 @@
 import requests
 
-OLLAMA_URL = "https://flatly-agreeing-flyover.ngrok-free.dev/api/generate"
+OLLAMA_URL = "https://abc123.ngrok-free.dev/api/generate"
 
 def get_ai_response(user_input):
     try:
@@ -8,17 +8,24 @@ def get_ai_response(user_input):
             OLLAMA_URL,
             json={
                 "model": "phi",
-                "prompt": f"You are a communication coach. Give a helpful, clear, and relevant response.\nUser: {user_input}\nAI:",
+                "prompt": f"""
+You are a communication coach.
+
+Respond clearly, naturally, and helpfully.
+
+User: {user_input}
+AI:
+""",
                 "stream": False
             },
-            timeout=15
+            timeout=60
         )
 
-        if response.status_code == 200:
-            data = response.json()
-            return data.get("response", "").strip() or "No response from AI"
+        data = response.json()
+        print("CHAT DEBUG:", data)
 
-        return f"AI Error: {response.status_code}"
+        return data.get("response", "No response from AI")
 
     except Exception as e:
-        return f"Error: {str(e)}"
+        print("CHAT ERROR:", e)
+        return "AI not responding"
